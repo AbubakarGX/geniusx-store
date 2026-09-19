@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from "react";
+
+import { useEffect, useState, type ReactNode } from "react";
 import { CartContext, type CartItem } from "./CartContext";
 
 type Product = {
@@ -10,7 +11,15 @@ type Product = {
 };
 
 function CartProvider({ children }: { children: ReactNode }) {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    const savedCart = localStorage.getItem("geniusx-cart");
+
+    return savedCart ? JSON.parse(savedCart) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("geniusx-cart", JSON.stringify(cart));
+  }, [cart]);
 
   function addToCart(product: Product) {
     setCart((previousCart) => {
@@ -43,7 +52,10 @@ function CartProvider({ children }: { children: ReactNode }) {
     setCart((previousCart) =>
       previousCart.map((item) =>
         item.id === id
-          ? { ...item, quantity: item.quantity + 1 }
+          ? {
+              ...item,
+              quantity: item.quantity + 1,
+            }
           : item
       )
     );
@@ -54,7 +66,10 @@ function CartProvider({ children }: { children: ReactNode }) {
       previousCart
         .map((item) =>
           item.id === id
-            ? { ...item, quantity: item.quantity - 1 }
+            ? {
+                ...item,
+                quantity: item.quantity - 1,
+              }
             : item
         )
         .filter((item) => item.quantity > 0)
